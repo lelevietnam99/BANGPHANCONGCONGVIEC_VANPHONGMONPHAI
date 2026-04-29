@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Thống Kê - Văn Phòng Môn Phái</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { font-family: 'Be Vietnam Pro', sans-serif; background-color: #f0f4f8; color: #334155; }
+    .main-container { max-width: 1100px; margin: 40px auto; }
+    .stat-card { 
+      background: white; border-radius: 12px; padding: 20px; 
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;
+      border-bottom: 4px solid transparent;
+    }
+    .stat-card.total { border-bottom-color: #0d6efd; }
+    .stat-card.done { border-bottom-color: #198754; }
+    .stat-card.pending { border-bottom-color: #ffc107; }
+    .stat-number { font-size: 2rem; font-weight: 700; margin-top: 10px; }
+    .chart-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .table-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; }
+    .nav-btn { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container main-container">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <a href="phancongcongviec.html" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-2"></i>Về trang Quản Lý</a>
+      <h2 class="m-0 fw-bold text-primary"><i class="fa-solid fa-chart-pie me-2"></i>BÁO CÁO CÔNG VIỆC</h2>
+      <div></div> </div>
+
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+      <div class="card-body d-flex align-items-center gap-3">
+        <label class="fw-bold mb-0"><i class="fa-regular fa-calendar-days me-2"></i>Chọn tháng báo cáo:</label>
+        <input type="month" id="monthFilter" class="form-control w-auto" onchange="processData()">
+        <button class="btn btn-primary" onclick="fetchData()"><i class="fa-solid fa-rotate-right"></i> Làm mới dữ liệu</button>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-4 mb-3">
+        <div class="stat-card total">
+          <h5 class="text-muted m-0">Tổng công việc</h5>
+          <div class="stat-number text-primary" id="tongCV">0</div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="stat-card done">
+          <h5 class="text-muted m-0">Đã hoàn thành</h5>
+          <div class="stat-number text-success" id="tongXong">0</div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="stat-card pending">
+          <h5 class="text-muted m-0">Đang chờ / Quá hạn</h5>
+          <div class="stat-number text-warning" id="tongCho">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-8 mb-3">
+        <div class="chart-container">
+          <h5 class="fw-bold text-center mb-3">Thống kê theo nhân sự</h5>
+          <canvas id="barChart" height="100"></canvas>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="chart-container h-100 d-flex flex-column justify-content-center">
+          <h5 class="fw-bold text-center mb-3">Tỉ lệ hoàn thành chung</h5>
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2"></i>Chi tiết năng suất nhân sự ban</h5>
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered text-center align-middle">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 5%">STT</th> <th class="text-start">Nhân sự</th>
+              <th>Tổng việc được giao</th>
+              <th class="text-success">Đã hoàn thành</th>
+              <th class="text-danger">Chưa làm</th>
+              <th>Tỉ lệ hoàn thành (%)</th>
+            </tr>
+          </thead>
+          <tbody id="reportTableBody">
+            <tr><td colspan="6" class="text-muted py-3">Đang tải dữ liệu báo cáo...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ DÁN LINK API CỦA BẠN VÀO ĐÂY ⚠️
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnfOnkbRafjGNR8CrZ2M-Akzs_0qBs191f49EDCEMMIhcOxwHSeBIJ6twePOFTCgU4/exec'; 
+    
+    let allTasks = [];
+    let dictLinks = {}; // Biến mới để lưu trữ từ điển [Tên - Link]
+    let barChartInstance = null;
+    let pieChartInstance = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const now = new Date();
+      const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById("monthFilter").value = currentMonth;
+      fetchData();
+    });
+
+    function fetchData() {
+      document.getElementById("tongCV").innerText = "...";
+      document.getElementById("tongXong").innerText = "...";
+      document.getElementById("tongCho").innerText = "...";
+
+      fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          allTasks = data.tasks;
+          dictLinks = data.linksNhanSu || {}; // Nhận dữ liệu link từ App Script
+          processData();
+        })
+        .catch(err => console.error("Lỗi:", err));
+    }
+
+    function processData() {
+      if(allTasks.length === 0) return;
+
+      const selectedMonth = document.getElementById("monthFilter").value;
+      let tongCV = 0, tongXong = 0, tongCho = 0;
+      let nsStats = {}; 
+
+      allTasks.forEach(task => {
+        let deadline = task[3];
+        let taskMonth = "";
+        if (deadline) {
+          let d = new Date(deadline);
+          if (!isNaN(d.getTime())) taskMonth = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        }
+
+        if (taskMonth === selectedMonth) {
+          tongCV++;
+          let isDone = task[4] === "Xong";
+          let nhanSu = task[2] || "Khác";
+
+          if (isDone) tongXong++; else tongCho++;
+
+          if (!nsStats[nhanSu]) nsStats[nhanSu] = { total: 0, done: 0, pending: 0 };
+          nsStats[nhanSu].total++;
+          if (isDone) nsStats[nhanSu].done++; else nsStats[nhanSu].pending++;
+        }
+      });
+
+      document.getElementById("tongCV").innerText = tongCV;
+      document.getElementById("tongXong").innerText = tongXong;
+      document.getElementById("tongCho").innerText = tongCho;
+
+      renderTable(nsStats);
+      renderCharts(nsStats, tongXong, tongCho);
+    }
+
+    function renderTable(nsStats) {
+      const tbody = document.getElementById("reportTableBody");
+      tbody.innerHTML = "";
+
+      let keys = Object.keys(nsStats);
+      if (keys.length === 0) {
+        // Cập nhật lại colspan=6
+        tbody.innerHTML = '<tr><td colspan="6" class="text-muted py-3">Không có công việc nào trong tháng này.</td></tr>';
+        return;
+      }
+
+      keys.sort((a, b) => nsStats[b].total - nsStats[a].total);
+
+      let stt = 1; // Khởi tạo biến đếm Số Thứ Tự
+
+      keys.forEach(ns => {
+        let stat = nsStats[ns];
+        let percent = stat.total > 0 ? Math.round((stat.done / stat.total) * 100) : 0;
+        
+        // --- XỬ LÝ TẠO LINK CHO TÊN NHÂN SỰ ---
+        let personalLink = dictLinks[ns];
+        let nameHTML = `<span class="fw-bold text-primary">${ns}</span>`;
+
+        if (personalLink && personalLink.trim() !== "") {
+          if (!personalLink.startsWith('http')) {
+            personalLink = 'https://' + personalLink;
+          }
+          nameHTML = `<a href="${personalLink}" target="_blank" class="fw-bold text-primary text-decoration-none" style="display:inline-block; transition:0.2s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Truy cập không gian làm việc của ${ns}">${ns} <i class="fa-solid fa-up-right-from-square ms-1" style="font-size: 0.75rem; color:#64748b;"></i></a>`;
+        }
+        // ---------------------------------------
+
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="fw-bold">${stt++}</td> <td class="text-start">${nameHTML}</td>
+          <td class="fw-medium">${stat.total}</td>
+          <td class="text-success fw-bold">${stat.done}</td>
+          <td class="text-danger fw-bold">${stat.pending}</td>
+          <td>
+            <div class="d-flex align-items-center justify-content-center">
+              <span class="me-2 fw-bold">${percent}%</span>
+              <div class="progress" style="width: 60px; height: 8px;">
+                <div class="progress-bar ${percent === 100 ? 'bg-success' : 'bg-primary'}" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCharts(nsStats, tongXong, tongCho) {
+      let labels = [], doneData = [], pendingData = [];
+      Object.keys(nsStats).forEach(ns => {
+        labels.push(ns); doneData.push(nsStats[ns].done); pendingData.push(nsStats[ns].pending);
+      });
+
+      if (barChartInstance) barChartInstance.destroy();
+      if (pieChartInstance) pieChartInstance.destroy();
+
+      const ctxBar = document.getElementById('barChart').getContext('2d');
+      barChartInstance = new Chart(ctxBar, {
+        type: 'bar',
+        data: { labels: labels, datasets: [ { label: 'Đã hoàn thành', data: doneData, backgroundColor: '#198754' }, { label: 'Chưa làm', data: pendingData, backgroundColor: '#ffc107' } ] },
+        options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } } }
+      });
+
+      const ctxPie = document.getElementById('pieChart').getContext('2d');
+      if(tongXong === 0 && tongCho === 0) {
+        pieChartInstance = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['Trống'], datasets: [{ data: [1], backgroundColor: ['#e2e8f0'] }] }, options: { plugins: { tooltip: { enabled: false }, legend: { display: false } } } });
+      } else {
+        pieChartInstance = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['Đã xong', 'Chưa làm'], datasets: [{ data: [tongXong, tongCho], backgroundColor: ['#198754', '#ffc107'], hoverOffset: 4 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+      }
+    }
+  </script>
+</body>
+</html>
