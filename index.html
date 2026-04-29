@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phân Công Công Việc - Văn Phòng Môn Phái</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Be Vietnam Pro', sans-serif; 
+      background-color: #f0f4f8; 
+      color: #334155;
+    }
+     .btn-report {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      display: inline-block;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+      letter-spacing: 0.5px;
+    }
+    .btn-report:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+      color: white;
+      text-decoration: none;
+      border-color: #fff;
+    }
+    .main-container { 
+      max-width: 1000px; 
+      margin: 40px auto; 
+    }
+    /* --- Bổ sung: Làm đẹp ô tìm kiếm bên trong danh sách nhân sự --- */
+    .choices__list--dropdown .choices__input {
+      color: #334155 !important; /* Màu chữ đậm rõ nét */
+      background-color: #f8fafc !important; /* Nền xám nhạt nhẹ nhàng */
+      border: 1px solid #cbd5e1 !important; /* Viền ô tìm kiếm */
+      border-radius: 6px !important;
+      padding: 10px 15px !important;
+      margin: 10px 10px 5px 10px !important;
+      width: calc(100% - 20px) !important;
+      font-family: inherit;
+    }
+    .choices__list--dropdown .choices__input:focus {
+      border-color: #0d6efd !important; /* Đổi màu viền khi click vào */
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important;
+    }
+    /* Làm nổi bật người được chọn khi rê chuột */
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+      background-color: #e0f2fe !important;
+      color: #0369a1 !important;
+    }
+    .card { 
+      border: none; 
+      border-radius: 16px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+      background: #ffffff;
+      margin-bottom: 30px;
+    }
+    .card-header-custom {
+      background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+      color: white;
+      border-radius: 16px 16px 0 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .form-label { font-weight: 600; color: #475569; }
+    textarea { white-space: pre-wrap; }
+    .form-control, .form-select { 
+      border-radius: 8px; 
+      border: 1px solid #cbd5e1;
+      padding: 10px 15px;
+    }
+    .form-control:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+    .btn { border-radius: 8px; padding: 10px 20px; font-weight: 500; }
+    .table { vertical-align: middle; }
+    .table thead { background-color: #f8fafc; color: #64748b; font-weight: 600; }
+    .badge { padding: 8px 12px; border-radius: 6px; font-weight: 500; }
+    
+    /* Tùy chỉnh thanh tìm kiếm Choices.js */
+    .choices__inner {
+      background-color: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 5px 15px;
+      min-height: 46px;
+    }
+    .choices.is-focused .choices__inner {
+      border-color: #0d6efd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container main-container">
+    
+    <div class="card">
+      <div class="card-header-custom">
+        <h2 class="m-0 fw-bold"><i class="fa-solid fa-scroll me-2"></i>VĂN PHÒNG MÔN PHÁI</h2>
+        <p class="m-0 mt-2 opacity-75">Bảng Quản Lý & Phân Công Công Việc</p>
+      </div>
+      <div class="card-body p-4">
+        <div class="mb-4">
+          <a href="thongkecongviec_tungnhansu.html" class="btn btn-report" target="_blank">
+            <i class="fa-solid fa-chart-bar me-2"></i>📊 BÁO CÁO CÔNG VIỆC - VĂN PHÒNG MÔN PHÁI
+          </a>
+        </div>
+      <div class="card-body p-4">
+        <form id="taskForm">
+          <input type="hidden" id="taskId">
+          
+          <div class="mb-4">
+            <label class="form-label"><i class="fa-solid fa-clipboard-list me-2"></i>Nội dung công việc</label>
+            <textarea class="form-control" id="tenCV" rows="3" placeholder="- Chuẩn bị danh sách thi đấu&#10;- Lên lịch tập luyện" required></textarea>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <label class="form-label"><i class="fa-solid fa-user-ninja me-2"></i>Nhân sự phụ trách</label>
+              <select class="form-select" id="nhanSu" required>
+                <option value="">Đang tải danh sách...</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+              <label class="form-label"><i class="fa-regular fa-clock me-2"></i>Thời hạn (Deadline)</label>
+              <input type="datetime-local" class="form-control" id="thoiGian" required>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label"><i class="fa-regular fa-comment-dots me-2"></i>Ghi chú</label>
+            <input type="text" class="form-control" id="ghiChu" placeholder="Nhập ghi chú hoặc yêu cầu thêm (nếu có)">
+          </div>
+
+          <div class="form-check mb-4 p-3 bg-light rounded-3 border">
+            <input class="form-check-input ms-1" type="checkbox" id="tinhTrang" style="transform: scale(1.3);">
+            <label class="form-check-label fw-bold text-success ms-2" for="tinhTrang">
+              Đánh dấu đã hoàn thành công việc này
+            </label>
+          </div>
+          
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary" id="btnSubmit">
+              <i class="fa-solid fa-plus me-1"></i> Phân công việc mới
+            </button>
+            <button type="button" class="btn btn-secondary d-none" id="btnCancel" onclick="resetForm()">
+              <i class="fa-solid fa-xmark me-1"></i> Hủy chỉnh sửa
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <h4 class="mb-4 fw-bold text-primary"><i class="fa-solid fa-tasks me-2"></i>Danh sách công việc</h4>
+      <div class="table-responsive">
+        <table class="table table-hover border">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 5%">STT</th>
+              <th style="width: 30%">Công việc</th>
+              <th style="width: 15%">Người phụ trách</th>
+              <th style="width: 15%">Deadline</th>
+              <th style="width: 10%">Trạng thái</th>
+              <th style="width: 15%">Ghi chú</th>
+              <th style="width: 10%" class="text-center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i>Đang kết nối dữ liệu...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+    // ⚠️ ĐỪNG QUÊN DÁN LẠI LINK API CỦA BẠN VÀO ĐÂY NHÉ ⚠️
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnfOnkbRafjGNR8CrZ2M-Akzs_0qBs191f49EDCEMMIhcOxwHSeBIJ6twePOFTCgU4/exec'; 
+
+    let allTasks = [];
+    let nhanSuChoices; 
+
+    document.addEventListener("DOMContentLoaded", function() {
+      nhanSuChoices = new Choices('#nhanSu', {
+        searchEnabled: true,
+        itemSelectText: '', 
+        noResultsText: 'Không tìm thấy huynh đệ này',
+        placeholderValue: '-- Chọn nhân sự --',
+      });
+      fetchData();
+    });
+
+    function fetchData() {
+      fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          const nhanSuOptions = [{ value: '', label: '-- Cập nhật người phụ trách --', disabled: true, selected: true }];
+          data.nhanSu.forEach(name => {
+            nhanSuOptions.push({ value: name, label: name });
+          });
+          nhanSuChoices.setChoices(nhanSuOptions, 'value', 'label', true); 
+          allTasks = data.tasks;
+          renderTable();
+        })
+        .catch(err => console.error("Lỗi tải dữ liệu:", err));
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+      if(allTasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Văn phòng hiện chưa có công việc nào.</td></tr>';
+        return;
+      }
+
+      let now = new Date(); // Lấy thời gian thực để tính số ngày
+
+      allTasks.forEach(task => {
+        let isDone = task[4] === "Xong";
+        let statusBadge = isDone 
+            ? '<span class="badge bg-success text-white"><i class="fa-solid fa-check me-1"></i>Xong</span>' 
+            : '<span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half me-1"></i>Đang chờ</span>';
+        
+        // --- XỬ LÝ ĐỊNH DẠNG NGÀY & THANH TIẾN ĐỘ DEADLINE ---
+        let rawDeadline = task[3];
+        let deadlineUI = rawDeadline; // Fallback nếu lỗi
+
+        if (rawDeadline) {
+          let d = new Date(rawDeadline);
+          if (!isNaN(d.getTime())) {
+            // Định dạng: hh:mm dd/mm/yyyy
+            let pad = (n) => n.toString().padStart(2, '0');
+            let displayDate = `${pad(d.getHours())}:${pad(d.getMinutes())} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+
+            if (isDone) {
+               // Đã xong -> full xanh
+               deadlineUI = `
+                <div class="fw-bold text-success">${displayDate}</div>
+                <div class="progress mt-1" style="height: 6px;">
+                  <div class="progress-bar bg-success" style="width: 100%;"></div>
+                </div>
+                <small class="text-success fw-medium">Đã hoàn thành</small>`;
+            } else {
+              // Chưa xong -> Tính toán ngày
+              let timeDiff = d.getTime() - now.getTime();
+              let daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)); // Làm tròn ngày
+
+              let barColor = "bg-primary";
+              let statusText = "";
+              let barWidth = "100%"; 
+
+              if (daysDiff < 0) {
+                barColor = "bg-danger";
+                statusText = `<span class="text-danger fw-bold"><i class="fa-solid fa-circle-exclamation"></i> Quá hạn ${Math.abs(daysDiff)} ngày</span>`;
+              } else if (daysDiff === 0) {
+                barColor = "bg-warning";
+                statusText = `<span class="text-warning text-dark fw-bold"><i class="fa-solid fa-bell"></i> Hạn cuối hôm nay!</span>`;
+              } else {
+                barColor = daysDiff <= 3 ? "bg-warning" : "bg-primary";
+                // Lấy mốc 14 ngày làm 100% để thanh bar tự ngắn lại khi gần tới hạn
+                let percent = Math.round((daysDiff / 14) * 100); 
+                barWidth = Math.min(percent, 100) + "%";
+                statusText = `<span class="text-muted fw-medium">Còn ${daysDiff} ngày</span>`;
+              }
+
+              deadlineUI = `
+                <div class="fw-bold" style="color: #475569;">${displayDate}</div>
+                <div class="progress mt-1" style="height: 6px; background-color: #e2e8f0;">
+                  <div class="progress-bar ${barColor} progress-bar-striped" style="width: ${barWidth};"></div>
+                </div>
+                <div style="font-size: 0.85rem; margin-top: 2px;">${statusText}</div>`;
+            }
+          }
+        }
+        // ----------------------------------------------------
+
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="fw-bold">${task[0]}</td>
+          <td style="white-space: pre-wrap;">${task[1]}</td>
+          <td class="fw-medium text-primary">${task[2]}</td>
+          <td>${deadlineUI}</td>
+          <td>${statusBadge}</td>
+          <td class="text-muted small">${task[5]}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline-primary mb-1 w-100" onclick="editTask(${task[0]})"><i class="fa-solid fa-pen"></i> Sửa</button>
+            <button class="btn btn-sm btn-outline-danger w-100" onclick="deleteTask(${task[0]})"><i class="fa-solid fa-trash"></i> Xóa</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById("taskForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const stt = document.getElementById("taskId").value;
+      const payload = {
+        action: stt ? "update" : "add",
+        stt: stt,
+        tenCV: document.getElementById("tenCV").value,
+        nhanSu: document.getElementById("nhanSu").value,
+        thoiGian: document.getElementById("thoiGian").value,
+        tinhTrang: document.getElementById("tinhTrang").checked,
+        ghiChu: document.getElementById("ghiChu").value
+      };
+
+      document.getElementById("btnSubmit").innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang xử lý...';
+
+      fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
+      .then(res => res.json())
+      .then(data => {
+        resetForm();
+        fetchData(); 
+      });
+    });
+
+    function editTask(stt) {
+      const task = allTasks.find(t => t[0] == stt);
+      if(task) {
+        document.getElementById("taskId").value = task[0];
+        document.getElementById("tenCV").value = task[1];
+        nhanSuChoices.setChoiceByValue(task[2]); 
+        
+        // Fix định dạng thời gian để đẩy ngược lên form Sửa
+        let rawDate = task[3];
+        if (rawDate) {
+          let d = new Date(rawDate);
+          if (!isNaN(d.getTime())) {
+            let pad = (n) => n.toString().padStart(2, '0');
+            // Cấu trúc bắt buộc của ô datetime-local: yyyy-MM-ddThh:mm
+            document.getElementById("thoiGian").value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          }
+        }
+
+        document.getElementById("tinhTrang").checked = (task[4] === "Xong");
+        document.getElementById("ghiChu").value = task[5];
+
+        document.getElementById("btnSubmit").innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> Lưu cập nhật';
+        document.getElementById("btnSubmit").classList.replace("btn-primary", "btn-success");
+        document.getElementById("btnCancel").classList.remove("d-none");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function deleteTask(stt) {
+      if(confirm("Bạn có chắc chắn muốn xóa công việc này khỏi danh sách?")) {
+        const payload = { action: "delete", stt: stt };
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(data => { fetchData(); });
+      }
+    }
+
+    function resetForm() {
+      document.getElementById("taskForm").reset();
+      document.getElementById("taskId").value = "";
+      if(nhanSuChoices) nhanSuChoices.setChoiceByValue(''); 
+      document.getElementById("btnSubmit").innerHTML = '<i class="fa-solid fa-plus me-1"></i> Phân công việc mới';
+      document.getElementById("btnSubmit").classList.replace("btn-success", "btn-primary");
+      document.getElementById("btnCancel").classList.add("d-none");
+    }
+  </script>
+</body>
+</html>
